@@ -1,4 +1,5 @@
 import math
+import random
 
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
@@ -60,6 +61,24 @@ def nearestNode(p):
 
     return dystans.index(min(dystans))
 
+def samp_point_elipse(start, goal, par_1 = 1.5, par_2 = 0.4):
+    d = math.dist(start,goal)
+    a = par_1 * d
+    b = par_2 * d
 
-def rrt(start, goal, mapa, step_len, max_iter, tolerance):
+    sr_x = (start[0] + goal[0])  / 2
+    sr_y = (start[1] + goal[1])  / 2
+    theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
+
+    phi = random.uniform(0, 2 * math.pi)
+    r = random.uniform(0, 1)
+    x_norm= a * r * math.cos(phi)
+    y_norm = b * r * math.sin(phi)
+
+    X = x_norm * math.cos(theta) - y_norm * math.sin(theta) + sr_x
+    Y = x_norm * math.sin(theta) + y_norm * math.cos(theta) + sr_y
+
+    return X,Y
+
+def rrt_elipse(start, goal, mapa, step_len, max_iter, tolerance):
 
