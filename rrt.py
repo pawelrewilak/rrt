@@ -32,8 +32,8 @@ class Tree():
 
     def add_node(self,new_node,parrent_node):
         self.nodes.append(new_node)
-        parrent_node.childer.append(new_node)
-        new_node.parrent = parrent_node
+        parrent_node.children.append(new_node)
+        new_node.parent = parrent_node
         return 
 
     def nearest(self,new_node):
@@ -90,10 +90,12 @@ def samp_point_elipse(start, goal, par_1 = 1.5, par_2 = 0.4):
 
     X = x_norm * math.cos(theta) - y_norm * math.sin(theta) + sr_x
     Y = x_norm * math.sin(theta) + y_norm * math.cos(theta) + sr_y
+    X = max(0, min(X, np_img.shape[1]-1))
+    Y = max(0, min(Y, np_img.shape[0]-1))
 
     return treeNode(X,Y)
 
-def rrt_elipse(start, goal, mapa, step_len = 0.05, max_iter = 1000, tolerance = 0.1,goal_bias = 0.01):
+def rrt_elipse(start, goal, mapa, step_len = 5, max_iter = 1000, tolerance = 3 ,goal_bias = 0.05):
 
     start_node = treeNode(start[0],start[1])
     tree = Tree(start_node)
@@ -108,21 +110,22 @@ def rrt_elipse(start, goal, mapa, step_len = 0.05, max_iter = 1000, tolerance = 
 
         pot_parrent = tree.nearest(sampl_node)
 
-        if tree.distance(pot_parrent,sampl_node) <= step_len and kolizja(pot_parrent,sampl_node) is False:
+        if tree.distance(pot_parrent,sampl_node) <= step_len and kolizja(pot_parrent,sampl_node,np_img) is False:
             new_node = sampl_node
             tree.add_node(new_node,pot_parrent)
-            
-        if tree.distance(pot_parrent,sampl_node) > step_len:
+        
+        else:
             d = tree.distance(pot_parrent,sampl_node)
             stepX = ((sampl_node.locationX - pot_parrent.locationX) / d) * step_len
             stepY = ((sampl_node.locationY - pot_parrent.locationY) / d) *step_len
-
             new_node = treeNode(pot_parrent.locationX + stepX, pot_parrent.locationY + stepY)
-            if not kolizja(pot_parrent,new_node):
+
+            if not kolizja(pot_parrent,new_node,np_img):
                 tree.add_node(new_node,pot_parrent)
 
         if tree.distance(new_node,goal) < tolerance:
-            return tree.path_recovery
+            tree.add_node(treeNode(goal[0],goal[1]),new_node)
+            return tree.path_recovery(tree.nodes[-1])
     
     return "Path not found"
 
