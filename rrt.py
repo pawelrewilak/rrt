@@ -5,13 +5,14 @@ from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
 import numpy as np
 
-img = Image.open('./images/mapa.png')
+img = Image.open('./images/mapa_pusta.png')
 img = ImageOps.grayscale(img)
 img = ImageOps.invert(img)
 
 np_img = np.array(img)
 np_img = (np_img > 128).astype(np.uint8)
 
+np_img = np.zeros((300, 400), dtype=np.uint8)
 
 class treeNode():
     def __init__(self, locationX, locationY):
@@ -99,7 +100,7 @@ def samp_point_elipse(start, goal, mapa, par_1 = 1.5, par_2 = 0.4):
                 return treeNode(X, Y)
 
 
-def rrt_elipse(start, goal, mapa, step_len = 0, max_iter = 1000, tolerance = 3 ,goal_bias = 0.05):
+def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 ,goal_bias = 0.9):
 
     plt.ion()
     h, w = mapa.shape
@@ -170,11 +171,11 @@ def rrt_elipse(start, goal, mapa, step_len = 0, max_iter = 1000, tolerance = 3 ,
     return "Path not found"
 
 
-start = (10, 10)        # lewy górny róg mapy, np.
-goal = (200, 150)       # jakiś punkt w mapie
+start = (10, 10)
+goal = (200, 150)
 
 
-path = rrt_elipse(start, goal, np_img, step_len=5, max_iter=2000, tolerance=3, goal_bias=0.1)
+path = rrt_elipse(start, goal, np_img, step_len = 50, max_iter=2000, tolerance=3, goal_bias=0.1)
 print(path)
 
 
