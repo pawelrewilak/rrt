@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
-img = Image.open('./images/mapa_pusta.png')
+img = Image.open('./images/mapa2.png')
 img = ImageOps.grayscale(img)
 img = ImageOps.invert(img)
 
@@ -75,7 +75,7 @@ def collision_free(p1,p2,mapa):
             return False
     return True
 
-def get_ellipse_params(start, goal, par_1=1.5, par_2=0.4):
+def get_ellipse_params(start, goal, par_1=2, par_2=0.8):
     d = math.dist(start, goal)
     a = par_1 * d
     b = par_2 * d
@@ -84,7 +84,7 @@ def get_ellipse_params(start, goal, par_1=1.5, par_2=0.4):
     theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
     return sr_x, sr_y, a, b, theta
 
-def samp_point_elipse(start, goal, mapa, par_1 = 1.5, par_2 = 0.4):
+def samp_point_elipse(start, goal, mapa, par_1 = 2, par_2 = 0.8):
 
     while True:
         d = math.dist(start,goal)
@@ -181,7 +181,7 @@ def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 
                 return f"Path found in {i} iterations", i
 
 
-        plt.pause(0.00001)
+        #plt.pause(0.00001)
         try:
             pt.remove()
         except:
@@ -193,11 +193,11 @@ def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 
     return "Path not found"
 
 
-start = (10, 10)
-goal = (1000, 700)
+start = (1190, 80)
+goal = (220, 850)
 
 
-path = rrt_elipse(start, goal, np_img, step_len = 30, max_iter=2000, tolerance=30, goal_bias=0.3)
+path = rrt_elipse(start, goal, np_img, step_len = 30, max_iter=2000, tolerance=30, goal_bias=0.1)
 print(path)
 
 
