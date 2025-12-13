@@ -3,6 +3,7 @@ import random
 
 from PIL import Image, ImageOps
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import numpy as np
 
 img = Image.open('./images/mapa_pusta.png')
@@ -11,8 +12,6 @@ img = ImageOps.invert(img)
 
 np_img = np.array(img)
 np_img = (np_img > 128).astype(np.uint8)
-
-np_img = np.zeros((300, 400), dtype=np.uint8)
 
 class treeNode():
     def __init__(self, locationX, locationY):
@@ -49,7 +48,7 @@ class Tree():
         while final_node.parent is not None:
             path.append(final_node)
             final_node = final_node.parent
-        path.reverse()
+        #path.reverse()
         return path
 
     def distance(self,node1,node2):
@@ -76,6 +75,14 @@ def collision_free(p1,p2,mapa):
             return False
     return True
 
+def get_ellipse_params(start, goal, par_1=1.5, par_2=0.4):
+    d = math.dist(start, goal)
+    a = par_1 * d
+    b = par_2 * d
+    sr_x = (start[0] + goal[0]) / 2
+    sr_y = (start[1] + goal[1]) / 2
+    theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
+    return sr_x, sr_y, a, b, theta
 
 def samp_point_elipse(start, goal, mapa, par_1 = 1.5, par_2 = 0.4):
 
@@ -102,22 +109,36 @@ def samp_point_elipse(start, goal, mapa, par_1 = 1.5, par_2 = 0.4):
 
 def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 ,goal_bias = 0.9):
 
+    
     plt.ion()
     h, w = mapa.shape
-    fig, ax = plt.subplots(figsize=(w / 50, h / 50))
+    
+    fig, ax = plt.subplots(figsize=(12, 7)) 
 
-    ax.imshow(mapa, cmap='binary')
-    ax.scatter(start[0], start[1], c='red', s=60, marker='X')
-    ax.scatter(goal[0], goal[1], c='red', s=60, marker='X')
-
-    ax.set_aspect('equal', adjustable='box')
     ax.set_xlim(0, w)
     ax.set_ylim(h, 0)
+    ax.imshow(mapa, cmap='binary')
+    
+
+    ax.scatter(start[0], start[1], c='red', s=100, marker='X', zorder=5)
+    ax.scatter(goal[0], goal[1], c='green', s=100, marker='X', zorder=5)
 
     start_node = treeNode(start[0], start[1])
     tree = Tree(start_node)
 
+    # --- WIZUALIZACJA ELIPSY ---
+    sr_x, sr_y, a, b, theta = get_ellipse_params(start, goal)
+    ellipse_patch = patches.Ellipse((sr_x, sr_y), width=2*a, height=2*b, angle=math.degrees(theta), 
+                                    fill=False, color='orange', linestyle='--', alpha=0.5, linewidth=1)
+    ax.add_patch(ellipse_patch)
+    iter_text = ax.text(0.02, 0.95, '', transform=ax.transAxes, fontsize=5, color='blue', fontweight='bold')
+
+
+    plt.pause(3)
+
     for i in range(max_iter):
+
+        iter_text.set_text(f'Iteracja: {i}')
 
         if random.random() < goal_bias:
             sample_node = treeNode(goal[0], goal[1])
@@ -125,7 +146,7 @@ def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 
         else:
             sample_node = samp_point_elipse(start,goal, mapa)
 
-        pt, = ax.plot(sample_node.locationX, sample_node.locationY, marker='o', color='red', markersize=3)
+        pt, = ax.plot(sample_node.locationX, sample_node.locationY, marker='o', color='red', markersize=15)
 
         pot_parent = tree.nearest(sample_node)
         distance = tree.distance(pot_parent,sample_node)
@@ -151,15 +172,16 @@ def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 
                         pass
                     else:
                         ax.plot([node.locationX, node.parent.locationX], [node.locationY, node.parent.locationY],
-                                c='green', linewidth=2)
+                                c='green', linewidth=4)
+                        plt.pause(0.03)
 
                 plt.ioff()
                 plt.show()
 
-                return f"Path found in {i} iterations"
+                return f"Path found in {i} iterations", i
 
 
-        plt.pause(0.001)
+        plt.pause(0.00001)
         try:
             pt.remove()
         except:
@@ -172,10 +194,10 @@ def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 
 
 
 start = (10, 10)
-goal = (200, 150)
+goal = (1000, 700)
 
 
-path = rrt_elipse(start, goal, np_img, step_len = 50, max_iter=2000, tolerance=3, goal_bias=0.1)
+path = rrt_elipse(start, goal, np_img, step_len = 30, max_iter=2000, tolerance=30, goal_bias=0.3)
 print(path)
 
 
