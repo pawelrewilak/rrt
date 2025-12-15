@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
-img = Image.open('./images/mapa2.png')
+img = Image.open('./images/mapa3.png')
 img = ImageOps.grayscale(img)
 img = ImageOps.invert(img)
 
@@ -75,7 +75,7 @@ def collision_free(p1,p2,mapa):
             return False
     return True
 
-def get_ellipse_params(start, goal, par_1=2, par_2=0.8):
+def get_ellipse_params(start, goal, par_1=1.5, par_2=0.4):
     d = math.dist(start, goal)
     a = par_1 * d
     b = par_2 * d
@@ -84,7 +84,7 @@ def get_ellipse_params(start, goal, par_1=2, par_2=0.8):
     theta = math.atan2(goal[1] - start[1], goal[0] - start[0])
     return sr_x, sr_y, a, b, theta
 
-def samp_point_elipse(start, goal, mapa, par_1 = 2, par_2 = 0.8):
+def samp_point_elipse(start, goal, mapa, par_1 = 1.5, par_2 = 0.4):
 
     while True:
         d = math.dist(start,goal)
@@ -108,6 +108,7 @@ def samp_point_elipse(start, goal, mapa, par_1 = 2, par_2 = 0.8):
 
 
 def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 ,goal_bias = 0.9):
+
 
     
     plt.ion()
@@ -181,23 +182,117 @@ def rrt_elipse(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 
                 return f"Path found in {i} iterations", i
 
 
-        #plt.pause(0.00001)
+        plt.pause(0.001)
+        try:
+            pt.remove()
+        except:
+            pass
+    return "Path not found"
+
+def rrt_elipse_dynamic_weight(start, goal, mapa, step_len = 40, max_iter = 1000, tolerance = 3 , pmax = 0.5 , pmin = 0.1):
+
+    
+    plt.ion()
+    h, w = mapa.shape
+    
+    fig, ax = plt.subplots(figsize=(12, 7)) 
+
+    ax.set_xlim(0, w)
+    ax.set_ylim(h, 0)
+    ax.imshow(mapa, cmap='binary')
+    
+
+    ax.scatter(start[0], start[1], c='red', s=100, marker='X', zorder=5)
+    ax.scatter(goal[0], goal[1], c='green', s=100, marker='X', zorder=5)
+
+    start_node = treeNode(start[0], start[1])
+    tree = Tree(start_node)
+
+    # --- WIZUALIZACJA ELIPSY ---
+    sr_x, sr_y, a, b, theta = get_ellipse_params(start, goal)
+    ellipse_patch = patches.Ellipse((sr_x, sr_y), width=2*a, height=2*b, angle=math.degrees(theta), 
+                                    fill=False, color='orange', linestyle='--', alpha=0.5, linewidth=1)
+    ax.add_patch(ellipse_patch)
+
+    iter_text = ax.text(0, 1.02, '', transform=ax.transAxes, fontsize=8, color='blue', fontweight='bold')
+    weight_text = ax.text(0.2, 1.02, '', transform=ax.transAxes, fontsize=8, color='blue', fontweight='bold')
+    succes_rate_text = ax.text(0.5, 1.02, '', transform=ax.transAxes, fontsize=8, color='blue', fontweight='bold')
+
+    plt.pause(1)
+    success = 0
+    ps = 0.0
+    pa = pmin
+    
+    for i in range(1,max_iter + 1):
+
+        ps = success / i
+
+        pa = pmin + (pmax - pmin) * ps
+        pa = np.clip(pa, pmin, pmax)
+
+        if i % 5 == 0:
+            iter_text.set_text(f'Iteracja: {i}') 
+            weight_text.set_text(f'Goal Bias: {pa:.2f}')
+            succes_rate_text.set_text(f'Success Rate: {ps:.3f}')
+
+
+        if random.random() < pa:
+            sample_node = treeNode(goal[0], goal[1])
+
+
+        else:
+            sample_node = samp_point_elipse(start,goal, mapa)
+
+        pt, = ax.plot(sample_node.locationX, sample_node.locationY, marker='o', color='red', markersize=15)
+
+        pot_parent = tree.nearest(sample_node)
+        distance = tree.distance(pot_parent,sample_node)
+
+        if distance <= step_len:
+            new_node = sample_node
+            
+
+        else:
+            stepX = ((sample_node.locationX - pot_parent.locationX) / distance) * step_len
+            stepY = ((sample_node.locationY - pot_parent.locationY) / distance) * step_len
+            new_node = treeNode(pot_parent.locationX + stepX, pot_parent.locationY + stepY)
+
+        if collision_free(pot_parent,new_node,mapa):
+            tree.add_node(new_node,pot_parent)
+            success += 1
+            ax.plot([pot_parent.locationX, new_node.locationX], [pot_parent.locationY, new_node.locationY], c='blue', linewidth=2)
+
+
+            if tree.distance(new_node, treeNode(goal[0], goal[1])) < tolerance:
+                tree.add_node(treeNode(goal[0], goal[1]), new_node)
+                found_path = tree.path_recovery(tree.nodes[-1])
+                for node in found_path:
+                    if node.parent is None:
+                        pass
+                    else:
+                        ax.plot([node.locationX, node.parent.locationX], [node.locationY, node.parent.locationY],
+                                c='green', linewidth=4)
+                        plt.pause(0.03)
+
+                plt.ioff()
+                plt.show()
+
+                return f"Path found! \nIterations: {i} \nFinal Goal Bias: {pa:.2f} \nSucces Rate: {100 * ps:.1f} % "
+
+        #plt.pause(0.001)
         try:
             pt.remove()
         except:
             pass
 
-
-
-
     return "Path not found"
 
 
 start = (1190, 80)
-goal = (220, 850)
+goal = (85, 600)
 
 
-path = rrt_elipse(start, goal, np_img, step_len = 30, max_iter=2000, tolerance=30, goal_bias=0.1)
+path = rrt_elipse_dynamic_weight(start, goal, np_img, step_len = 30, max_iter=1500, tolerance=30)
 print(path)
 
 
