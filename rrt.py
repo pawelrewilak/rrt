@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
 
-img = Image.open('./images/mapa2.png')
+img = Image.open('./images/mapa3.png')
 img = ImageOps.grayscale(img)
 img = ImageOps.invert(img)
 
@@ -691,7 +691,7 @@ def rrt_solver(start, goal, mapa, step_len = 25, max_iter=1000, tolerance=30, bi
 
     return "Path not found"
 
-# Wersja na nootebook
+# Wersja na nootebook (nie uzywana :( )
 def rrt_solver_nootebook(start, goal, mapa, step_len = 25, max_iter=1000, tolerance=30, bias_mode='FIXED', is_rrt_star=False, fixed_bias=0.9, pmax=0.4, pmin=0.05):
     h, w = mapa.shape
     start_node = treeNode(start[0], start[1])
@@ -790,5 +790,5 @@ if __name__ == "__main__":
     start = (1190, 80)
     goal = (100, 800)
     
-    path = rrt_solver(start, goal, np_img, step_len = 25, max_iter=1500, tolerance=30, bias_mode= 'HYBRID', is_rrt_star=False)
+    path = rrt_solver(start, goal, np_img, step_len = 30, max_iter=1500, tolerance=30, bias_mode= 'HYBRID', is_rrt_star=True)
     print(path)
