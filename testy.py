@@ -69,10 +69,12 @@ def collision_free(p1,p2,mapa):
     x2, y2 = p2.locationX, p2.locationY
 
     h, w = mapa.shape
+    
     if not (0 <= x1 < w and 0 <= y1 < h and 0 <= x2 < w and 0 <= y2 < h):
         return False
 
     num_points = int(max(abs(x1-x2), abs(y1-y2)))
+
     if num_points == 0:
         return True
 
@@ -80,6 +82,10 @@ def collision_free(p1,p2,mapa):
         t = i / max(num_points, 1)
         x = round(x1 + (x2 - x1) * t)
         y = round(y1 + (y2 - y1) * t)
+        
+        if not (0 <= x < w and 0 <= y < h):
+            return False 
+
         if mapa[y, x] == 1:
             return False
     return True
@@ -232,8 +238,8 @@ def main_benchmark(num_trials=30, max_iter=1500, output_file='rrt_benchmark_resu
     
     maps_data = {
         'mapa2': {'path': './images/mapa2.png', 'start': (1190, 80), 'goal': (100, 800)},
-        'mapa1': {'path': './images/mapa1.png', 'start': (100, 100), 'goal': (900, 900)}, 
-        'mapa3': {'path': './images/mapa3.png', 'start': (50, 500), 'goal': (950, 500)},
+        'mapa1': {'path': './images/mapa1.png', 'start': (1190, 80), 'goal': (100, 800)}, 
+        'mapa3': {'path': './images/mapa3.png', 'start': (1190, 80), 'goal': (100, 800)},
     }
     
     configs = [

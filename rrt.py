@@ -691,32 +691,31 @@ def rrt_solver(start, goal, mapa, step_len = 25, max_iter=1000, tolerance=30, bi
 
     return "Path not found"
 
-def tests_rrt_solver(start, goal, mapa, step_len=25, max_iter=1000, tolerance=30, bias_mode='FIXED', is_rrt_star=False, fixed_bias=0.9, pmax=0.4, pmin=0.05):
+# Wersja na nootebook
+def rrt_solver_nootebook(start, goal, mapa, step_len = 25, max_iter=1000, tolerance=30, bias_mode='FIXED', is_rrt_star=False, fixed_bias=0.9, pmax=0.4, pmin=0.05):
     h, w = mapa.shape
     start_node = treeNode(start[0], start[1])
     tree = Tree(start_node)
-
+    
     RRT_STAR_RADIUS = 5 * step_len
     success = 0
     pa = pmin
 
     for i in range(1, max_iter + 1):
-        if bias_mode != 'FIXED':
-            ps = success / i
-            if ps < 1e-6:
-                ps = 1e-6
+        ps = success / i if i > 0 else 0
+        if ps < 1e-6: ps = 1e-6
 
-            if bias_mode == 'AIW':
-                pa = pmin + (pmax - pmin) * ps
-            elif bias_mode == 'HYBRID':
-                time_factor = (max_iter - i) / max_iter 
-                term_1 = (pmax - pmin) / ps
-                term_2 = pmin / ps
-                pa = 1 - (term_1 + time_factor * term_2)
-            pa = np.clip(pa, pmin, pmax)
+        if bias_mode == 'AIW':
+            pa = pmin + (pmax - pmin) * ps
+        elif bias_mode == 'HYBRID':
+            time_factor = (max_iter - i) / max_iter 
+            term_1 = (pmax - pmin) / ps
+            term_2 = pmin / ps
+            pa = 1 - (term_1 + time_factor * term_2)
         else: 
             pa = fixed_bias
-            ps = success / i
+        
+        pa = np.clip(pa, pmin, pmax)
 
         if random.random() < pa:
             sample_node = treeNode(goal[0], goal[1])
@@ -734,9 +733,7 @@ def tests_rrt_solver(start, goal, mapa, step_len=25, max_iter=1000, tolerance=30
             new_node = treeNode(pot_parent.locationX + stepX, pot_parent.locationY + stepY)
 
         final_parent = pot_parent
-        new_cost = 0.0
-        if pot_parent:
-            new_cost = pot_parent.cost + tree.distance(pot_parent, new_node)
+        new_cost = pot_parent.cost + tree.distance(pot_parent, new_node) if pot_parent else 0
 
         if is_rrt_star:
             near_nodes = tree.near(new_node, RRT_STAR_RADIUS)
@@ -744,10 +741,11 @@ def tests_rrt_solver(start, goal, mapa, step_len=25, max_iter=1000, tolerance=30
             best_parent = final_parent
 
             for near_node in near_nodes:
-                potential_cost = near_node.cost + tree.distance(near_node, new_node)
-                if potential_cost < min_cost and collision_free(near_node, new_node, mapa):
-                    min_cost = potential_cost
-                    best_parent = near_node
+                if collision_free(near_node, new_node, mapa):
+                    potential_cost = near_node.cost + tree.distance(near_node, new_node)
+                    if potential_cost < min_cost:
+                        min_cost = potential_cost
+                        best_parent = near_node
             
             final_parent = best_parent
             new_cost = min_cost
@@ -760,36 +758,37 @@ def tests_rrt_solver(start, goal, mapa, step_len=25, max_iter=1000, tolerance=30
 
             if is_rrt_star:
                 for near_node in near_nodes:
-                    rewire_cost = new_node.cost + tree.distance(new_node, near_node)
-                    if rewire_cost < near_node.cost and collision_free(new_node, near_node, mapa):
-                        tree.rewire(near_node, new_node)
-                        tree.update_descendant_costs(near_node)
+                    if near_node == final_parent: continue
+                    if collision_free(new_node, near_node, mapa):
+                        rewire_cost = new_node.cost + tree.distance(new_node, near_node)
+                        if rewire_cost < near_node.cost:
+                            tree.rewire(near_node, new_node)
+                            tree.update_descendant_costs(near_node)
 
             if tree.distance(new_node, treeNode(goal[0], goal[1])) < tolerance:
                 goal_node = treeNode(goal[0], goal[1])
                 goal_node.cost = new_node.cost + tree.distance(new_node, goal_node)
                 tree.add_node(goal_node, new_node)
                 
-                found_path = tree.path_recovery(goal_node)
-
                 return {
-                        "iterations": i,
-                        "cost": goal_node.cost,
-                        "success": True,
-                        "path": found_path
-                        }
+                    "success": True,
+                    "path": tree.path_recovery(goal_node),
+                    "iterations": i,
+                    "final_cost": goal_node.cost,
+                    "final_bias": pa
+                }
 
     return {
-        "iterations": max_iter,
-        "cost": float('inf'),
         "success": False,
+        "iterations": max_iter,
+        "final_cost": float('inf'),
         "path": []
     }
 
-start = (1190, 80)
-goal = (100, 800)
 
-
-path = rrt_solver(start, goal, np_img, step_len = 25, max_iter=1000, tolerance=30, bias_mode= 'FIXED', is_rrt_star=True)
-
-
+if __name__ == "__main__":
+    start = (1190, 80)
+    goal = (100, 800)
+    
+    path = rrt_solver(start, goal, np_img, step_len = 25, max_iter=1500, tolerance=30, bias_mode= 'HYBRID', is_rrt_star=False)
+    print(path)
