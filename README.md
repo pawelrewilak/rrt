@@ -4,7 +4,7 @@ Projekt badawczy analizujący wpływ adaptacyjnych strategii doboru wag (Adaptiv
 
 ## 🎯 Cel Projektu
 
-Rozwiązanie kompromisu między **szybkością znajdowania ścieżki** (zbieżność) a jej **jakością** (koszt/długość). Projekt porównuje klasyczne podejście ze stałym parametrem celowania (*Fixed Goal Bias*) z nowatorskim podejściem hybrydowym (*AIW-LDIW*).
+Rozwiązanie kompromisu między **szybkością znajdowania ścieżki** (zbieżność) a jej **jakością** (koszt/długość). Projekt porównuje klasyczne podejście ze stałym parametrem celowania (*Fixed Goal Bias*) z nowatorskim podejściem hybrydowym (*AIW-LDIW*). W dynamicznych środowiskach czas reakcji jest priorytetem. Dlatego kluczowym celem projektu jest maksymalizacja szybkości zbieżności algorytmu oraz minimalizacja kosztu obliczeniowego.
 
 ## 🚀 Kluczowe Funkcje
 
